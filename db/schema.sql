@@ -6,14 +6,14 @@ USE employeess_db;
 
 CREATE TABLE department (
   id INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(30) NOT NULL,
+  dept_name VARCHAR(30) NOT NULL,
   PRIMARY KEY (id)
 );
 
 CREATE TABLE role (
   id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(30) NOT NULL
-  salary DECIMAL(10,2) NOT NULL,
+  salary DECIMAL(10,2) default 0,
   department_id INT NOT NULL,
   PRIMARY KEY (id)
 );
