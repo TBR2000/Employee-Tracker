@@ -1,8 +1,8 @@
 INSERT INTO department (name)
-VALUES (), (), ();
+VALUES ('Sales'), ('Engineering'), ('Projects');
 
 INSERT INTO role (title, salary)
-VALUES (), (), ();
+VALUES ('Engineer'), ('Consulatant'), ('');
 
 INSERT INTO employee (first_name, last_name)
 VALUES (), (), ();

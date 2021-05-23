@@ -258,6 +258,17 @@ const addEmploy = () =>{
 
 //View dept function
 const viewDept = () =>{
+    //connect to db
+    connection.query('SELECT * FROM department', (err, results) => {
+        if (err) throw err;
+      //after getting results push into array
+        let array = [];
+        results.forEach(({ dept_name }) => {
+        array.push(dept_name);
+        });
+      // Print table to console  
+        console.table(['Department'], array);
+    })    
 
 };
 
