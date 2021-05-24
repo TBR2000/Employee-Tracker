@@ -85,17 +85,15 @@ const updateData = () => {
     inquirer.prompt({
         name: 'Update',
         type: 'list',
-        message: 'Would you like to Update a [DEPT], a [ROLE], or an [EMPLOYEE]?',
-        choices: ['DEPT', 'ROLE', 'EMPLOYEE','EXIT'],
+        message: 'Would you like to Update Employee [ROLE] or [Manager]?',
+        choices: ['ROLE', 'MANAGER','EXIT'],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
-        if (answer.Update === 'DEPT') {
-            updateDept();
+        if (answer.Update === 'MANAGER') {
+            updateManager();
         } else if (answer.Update === 'ROLE') {
             updateRole();
-        } else if (answer.Update === 'EMPLOYEE') {
-            updateEmploy();
         } else {
           connection.end();
         }
@@ -198,7 +196,7 @@ const addRole = () =>{
 
 //Add employee function
 const addEmploy = () =>{
-    // query the database for all items being auctioned
+    // query the database for all Roles
   connection.query('SELECT * FROM role', (err, results) => {
     if (err) throw err;
      // prompt for name of new employee
@@ -296,10 +294,11 @@ const viewRole = () =>{
     
     //after getting results push into array
     let array = [];
-    results.forEach(({ title, salary}) => {
+    results.forEach(({ title, salary, }) => {
     array.push({
       title: `${title}`,
-      salary: `${salary}`
+      salary: `${salary}`,
+      
     })
     });
   // Print table to console 
@@ -321,6 +320,7 @@ const viewEmploy = () =>{
     Name: `${first_name}`,
     Surname: `${last_name}`,
     Role: `${title}`,
+    
     })
   });
 // Print table to console 
@@ -330,18 +330,83 @@ const viewEmploy = () =>{
 
 };
 
-//Update dept function
-const updateDept = () =>{
-
-};
-
 //Update role function
 const updateRole = () =>{
+//Query Database to get list of employees
+  connection.query('SELECT * FROM employees_db.role INNER JOIN employees_db.employee;', (err, results) => {
+  if (err) throw err;
+  
+  inquirer.prompt([
+    //Create choice array of Employees in database
+    {
+      name: 'choice',
+        type: 'rawlist',
+        choices() {
+          const employeeArray = [];
+          results.forEach(({ first_name, last_name }) => {
+            employeeArray.push(`${first_name} ${last_name}`);
+          });
+          function unique(value, index, self) {
+            return self.indexOf(value) === index;
+          }
+          let newArray = employeeArray.filter(unique);
+          return newArray;
+        },
+        message: 'Which Employee do you wish to Update?',
+    },
+   {
+    name: 'newRole',
+    type: 'rawlist',
+    choices() {
+      const roleArray = [];
+      results.forEach(({ title }) => {
+        roleArray.push(title);
+      });
+      function unique(value, index, self) {
+        return self.indexOf(value) === index;
+      }
+      let array = roleArray.filter(unique);
+      return array;
+    },
+    message: 'What is the employees new Role?',
+    },  
+  ])
+  .then((answer)=>{
+    //Get Selected Employee ID
+    let lookupArray = answer.choice.split(" ")
+    
+    let updateEmployee = results.find(result => 
+      (result.first_name + result.last_name) === (lookupArray[0] + lookupArray[1]));
+      console.log(updateEmployee)
 
+    //Get Selected Roles ID
+    let updatedRole = results.find(result =>
+      result.title === answer.newRole);
+      console.log(updatedRole)
+
+    //Update database with new role
+    connection.query('UPDATE employee SET ? WHERE ?',
+      [
+        {
+          role_id: `${updatedRole.role_id}`,
+          
+        },
+        {
+          id: `${updateEmployee.id}`
+        },
+      ],
+      (err, res) => {
+        if (err) throw err;
+        console.log('Employee has been Updated!');
+        start();
+      }
+    );
+   });
+ });
 };
 
-//Update employee function
-const updateEmploy = () =>{
+//Update Manager function
+const updateManager = () =>{
 
 };
 
