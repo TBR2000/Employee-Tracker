@@ -228,6 +228,7 @@ const addEmploy = () =>{
       },
       
   ])
+  
   .then((answer) => {
     // gets the information of the chosen role
         let chosenRole;
@@ -236,24 +237,36 @@ const addEmploy = () =>{
             chosenRole = role;
           }
         }); 
-    // insert a new dept into the db with that department_id
+    //console.log (chosenRole)    
+
+  //Find and Insert Manager ID
+    let query = 'SELECT * FROM department JOIN role ON (role.department_id = department.id) RIGHT JOIN employee ON (employee.role_id = role.id) WHERE (title = ?)';
+    let vari = 'Manager'
+    connection.query(query,vari,(err, results) => {
+    if (err) throw err;
+        
+    let manager = results.find(result => 
+      result.department_id === chosenRole.department_id);
+        
+    // insert the new Employee into the db 
     connection.query(
       'INSERT INTO employee SET ?',
       {
         first_name: answer.first_name,
         last_name: answer.last_name,
         role_id: chosenRole.id,
-        //managers_id: manager.id
+        manager_id: manager.id
       },
       (err) => {
         if (err) throw err;
         console.log('Your new Employee has been added successfully!');
         // begin again
         start();
-      }
-    );
+       }
+      );      
+     });
+    });
   });
- }); 
 };
 
 //View dept function
@@ -298,6 +311,22 @@ const viewRole = () =>{
 
 //View employee function
 const viewEmploy = () =>{
+   //connect to db
+   connection.query('SELECT * FROM employees_db.employee INNER JOIN employees_db.role ON (role.id = employee.role_id);', (err, results) => {
+    if (err) throw err;
+   //after getting results push into array
+  let array = [];
+  results.forEach(({ first_name, last_name, title}) => {
+  array.push({
+    Name: `${first_name}`,
+    Surname: `${last_name}`,
+    Role: `${title}`,
+    })
+  });
+// Print table to console 
+  console.table('Employees',array);
+  start();
+})
 
 };
 
@@ -315,10 +344,6 @@ const updateRole = () =>{
 const updateEmploy = () =>{
 
 };
-
-
-  
-
 
 //connect to database
 connection.connect((err) => {
