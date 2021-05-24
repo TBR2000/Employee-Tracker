@@ -9,13 +9,13 @@ const connection = mysql.createConnection({
     port: 3306,
     user: 'root',
     password: 'root',
-    database: 'employeess_db',
+    database: 'employees_db',
 });
 
 // function which prompts the user for what action they should take
 const start = () => {
     inquirer.prompt({
-        name: 'Start',
+        name: 'start',
         type: 'list',
         message: 'Would you like to [ADD] to the database, [View] the database, or [Update] the database?',
         choices: ['ADD', 'VIEW', 'UPDATE','EXIT'],
@@ -238,16 +238,16 @@ const addEmploy = () =>{
         }); 
     // insert a new dept into the db with that department_id
     connection.query(
-      'INSERT INTO role SET ?',
+      'INSERT INTO employee SET ?',
       {
         first_name: answer.first_name,
         last_name: answer.last_name,
         role_id: chosenRole.id,
-        managers_id: manager.id
+        //managers_id: manager.id
       },
       (err) => {
         if (err) throw err;
-        console.log('Your new role was created successfully!');
+        console.log('Your new Employee has been added successfully!');
         // begin again
         start();
       }
@@ -264,16 +264,35 @@ const viewDept = () =>{
       //after getting results push into array
         let array = [];
         results.forEach(({ dept_name }) => {
-        array.push(dept_name);
+        array.push({
+          Department: `${dept_name}`
         });
-      // Print table to console  
-        console.table(['Department'], array);
+        });
+      // Print table to console 
+      console.table(array);
+      start();
     })    
 
 };
 
 //View role function
 const viewRole = () =>{
+    //connect to db
+    connection.query('SELECT * FROM role', (err, results) => {
+      if (err) throw err;
+    
+    //after getting results push into array
+    let array = [];
+    results.forEach(({ title, salary}) => {
+    array.push({
+      title: `${title}`,
+      salary: `${salary}`
+    })
+    });
+  // Print table to console 
+    console.table('Company Role',array);
+    start();
+  })
 
 };
 
