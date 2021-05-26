@@ -96,8 +96,8 @@ const viewData = () => {
     inquirer.prompt({
         name: 'View',
         type: 'list',
-        message: 'Would you like to VIEW a [DEPT], a [ROLE], the [EMPLOYEES] or the [FINANCIALS}?',
-        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')), (colours.magenta('FINANCIALS')), (colours.red('EXIT'))],
+        message: 'Would you like to VIEW a [DEPT], a [ROLE], the [EMPLOYEES], Employees [BY MANAGER] or the [FINANCIALS}?',
+        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')), (colours.cyan('BY MANAGER')), (colours.magenta('FINANCIALS')), (colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
@@ -107,6 +107,8 @@ const viewData = () => {
             viewRole();
         } else if (answer.View === (colours.green('EMPLOYEES'))) {
             viewEmploy();
+        } else if (answer.View === (colours.cyan('BY MANAGER'))) {
+            viewByManager();    
         } else if (answer.View === (colours.magenta('FINANCIALS'))) {
             viewFinances();     
         } else {
@@ -117,7 +119,7 @@ const viewData = () => {
 };
 
 // function that decides UPDATE choice
-const deleteData = () => {
+const updateData = () => {
     inquirer.prompt({
         name: 'Update',
         type: 'list',
@@ -138,7 +140,7 @@ const deleteData = () => {
 };
 
 // function that decides Delete choice
-const addData = () => {
+const deleteData = () => {
   inquirer.prompt({
       name: 'Delete',
       type: 'list',
@@ -370,27 +372,71 @@ const viewRole = () =>{
 //View employee function
 const viewEmploy = () =>{
    //connect to db
-   connection.query('SELECT employee.id, role.title, department.dept_name AS department, role.salary, CONCAT(employee.first_name, " ", employee.last_name) AS employee, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
+   connection.query('SELECT employee.id, role.title, department.dept_name AS department, role.salary, employee.first_name AS Employee_first, employee.last_name AS Employee_last, manager.first_name AS Manager_First, manager.last_name AS Manager_last FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
     if (err) throw err;
     
    //after getting results push into array
   let array = [];
-  results.forEach(({ employee, title, department, salary, manager }) => {
+  results.forEach(({ Employee_first, Employee_last, title, department, salary, Manager_First, Manager_last }) => {
                 
   array.push({
-    Employee: (colours.green(`${employee}`)),
+    Employee: (colours.green(`${Employee_first} ${Employee_last} `)),
     Role: (colours.yellow(`${title}`)),
     Salary: (colours.blue(`${salary}`)),
     Department: (colours.red(`${department}`)),
-    Manager: (colours.magenta(`${manager}`))
+    Manager: (colours.magenta(`${Manager_First} ${Manager_last}`))
     })
   
   });
 // Print table to console 
-  console.table('Employees',array);
+  console.table((colours.cyan('EMPLOYEE ROSTER')),array);
   start();
 })
 
+};
+
+//View By Manager Function
+const viewByManager = () =>{
+  //Query Database to get list of employees
+  connection.query('SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ', (err, results) => {
+    if (err) throw err;
+    inquirer.prompt([
+      {
+        name: 'managerchoice',
+          type: 'rawlist',
+          choices() {
+            const managerArray = [];
+            results.forEach(({ first_name, last_name, title }) => {
+              if (title === 'Manager'){
+                managerArray.push(`${first_name} ${last_name}`)
+              }
+            });
+            return managerArray
+          },
+          message: 'Who is the Manager you want to view Employees for?',
+      }
+    ])
+      .then((answer)=>{
+      //Get Selected managers ID
+      const managerlookupArray = answer.managerchoice.split(" ")
+          
+      const manager = results.find(result => 
+        (result.first_name + result.last_name) === (managerlookupArray[0] + managerlookupArray[1])); 
+        
+        //after getting results push into array
+      let array = [];
+      results.forEach(({ first_name, last_name, manager_id }) => {
+          if (manager.id === manager_id) {      
+              array.push({
+              Employee: (colours.green(`${first_name} ${last_name}`)),
+              })
+            };
+      });
+        // Print table to console 
+        console.table((colours.cyan('EMPLOYEE BY MANAGER')),array);
+        start();
+    });
+  });
 };
 
 //View Finances function
@@ -533,8 +579,7 @@ const updateManager = () =>{
             start();
           }
         );
-       });
-
+     });
   });
 };
 
