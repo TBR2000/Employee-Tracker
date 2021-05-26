@@ -49,8 +49,8 @@ const start = () => {
       inquirer.prompt({
         name: 'start',
         type: 'list',
-        message: 'Would you like to [ADD] to the database, [View] the database, or [Update] the database?',
-        choices: [(colours.yellow('ADD')), (colours.blue('VIEW')), (colours.green('UPDATE')),(colours.red('EXIT'))],
+        message: 'Would you like to [ADD] to the database, [View] the database, [Update] the database, or [Delete] from the database?',
+        choices: [(colours.yellow('ADD')), (colours.blue('VIEW')), (colours.green('UPDATE')),(colours.magenta('DELETE')),(colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call ADD, VIEW or UPDATE functions
@@ -60,6 +60,8 @@ const start = () => {
             viewData();
         } else if (answer.start === (colours.green('UPDATE'))) {
             updateData();
+        } else if (answer.start === (colours.magenta('DELETE'))) {
+            deleteData()    
         } else {
           connection.end();
         }
@@ -94,8 +96,8 @@ const viewData = () => {
     inquirer.prompt({
         name: 'View',
         type: 'list',
-        message: 'Would you like to VIEW a [DEPT], a [ROLE], or [EMPLOYEES]?',
-        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')),(colours.red('EXIT'))],
+        message: 'Would you like to VIEW a [DEPT], a [ROLE], the [EMPLOYEES] or the [FINANCIALS}?',
+        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')), (colours.magenta('FINANCIALS')), (colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
@@ -105,6 +107,8 @@ const viewData = () => {
             viewRole();
         } else if (answer.View === (colours.green('EMPLOYEES'))) {
             viewEmploy();
+        } else if (answer.View === (colours.magenta('FINANCIALS'))) {
+            viewFinances();     
         } else {
           connection.end();
         }
@@ -113,7 +117,7 @@ const viewData = () => {
 };
 
 // function that decides UPDATE choice
-const updateData = () => {
+const deleteData = () => {
     inquirer.prompt({
         name: 'Update',
         type: 'list',
@@ -130,6 +134,29 @@ const updateData = () => {
           connection.end();
         }
       });
+
+};
+
+// function that decides Delete choice
+const addData = () => {
+  inquirer.prompt({
+      name: 'Delete',
+      type: 'list',
+      message: 'Would you like to delete a [DEPT], a [ROLE], or an [EMPLOYEE]?',
+      choices: [(colours.yellow('DEPT')), (colours.blue('ROLE')), (colours.green('EMPLOYEE')),(colours.red('EXIT'))],
+    })
+    .then((answer) => {
+      // based on the answer, call Delete DEPT, ROLE or EMPLOYEE function
+      if (answer.Delete === (colours.yellow('DEPT'))) {
+          deleteDept();
+      } else if (answer.Delete === (colours.blue('ROLE'))) {
+          deleteRole();
+      } else if (answer.Delete === (colours.green('EMPLOYEE'))) {
+          deleteEmploy();
+      } else {
+        connection.end();
+      }
+    });
 
 };
 
@@ -355,7 +382,7 @@ const viewEmploy = () =>{
     Role: (colours.yellow(`${title}`)),
     Salary: (colours.blue(`${salary}`)),
     Department: (colours.red(`${department}`)),
-    Manager: (colours.yellow(`${manager}`))
+    Manager: (colours.magenta(`${manager}`))
     })
   
   });
@@ -363,6 +390,11 @@ const viewEmploy = () =>{
   console.table('Employees',array);
   start();
 })
+
+};
+
+//View Finances function
+const viewFinances = () =>{
 
 };
 
@@ -504,6 +536,21 @@ const updateManager = () =>{
        });
 
   });
+};
+
+//Delete Dept function
+const deleteDept = () =>{
+
+};
+
+//Delete Role Function
+const deleteRole = () =>{
+
+};
+
+//Delete Employee Function
+const deleteEmploy = () =>{
+
 };
 
 //connect to database
