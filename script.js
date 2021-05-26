@@ -267,7 +267,7 @@ const addEmploy = () =>{
             chosenRole = role;
           }
         }); 
-    //console.log (chosenRole)    
+       
 
   //Find and Insert Manager ID
     let query = 'SELECT * FROM department JOIN role ON (role.department_id = department.id) RIGHT JOIN employee ON (employee.role_id = role.id) WHERE (title = ?)';
@@ -343,16 +343,15 @@ const viewRole = () =>{
 //View employee function
 const viewEmploy = () =>{
    //connect to db
-   connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, department.dept_name AS department, role.salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
+   connection.query('SELECT employee.id, role.title, department.dept_name AS department, role.salary, CONCAT(employee.first_name, " ", employee.last_name) AS employee, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
     if (err) throw err;
     
    //after getting results push into array
   let array = [];
-  results.forEach(({ first_name, last_name, title, department, salary, manager }) => {
+  results.forEach(({ employee, title, department, salary, manager }) => {
                 
   array.push({
-    Name: (colours.green(`${first_name}`)),
-    Surname: (colours.green(`${last_name}`)),
+    Employee: (colours.green(`${employee}`)),
     Role: (colours.yellow(`${title}`)),
     Salary: (colours.blue(`${salary}`)),
     Department: (colours.red(`${department}`)),
@@ -372,7 +371,7 @@ const updateRole = () =>{
 //Query Database to get list of employees
   connection.query('SELECT role.*, employee.first_name, employee.last_name, employee.role_id, employee.id AS employeeID FROM employees_db.role LEFT JOIN employees_db.employee ON (role.id = role_id);', (err, results) => {
   if (err) throw err;
-  console.log(results)
+  
   inquirer.prompt([
     //Create choice array of Employees in database
     {
@@ -410,12 +409,10 @@ const updateRole = () =>{
     
     let updateEmployee = results.find(result => 
       (result.first_name + result.last_name) === (lookupArray[0] + lookupArray[1]));
-      console.log(updateEmployee)
 
     //Get Selected Roles ID
     let updatedRole = results.find(result =>
       result.title === answer.newRole);
-      console.log(updatedRole)
 
     //Update database with new role
     connection.query('UPDATE employee SET ? WHERE ?',
@@ -440,7 +437,73 @@ const updateRole = () =>{
 
 //Update Manager function
 const updateManager = () =>{
+  //Query Database to get list of employees
+  connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ', (err, results) => {
+    if (err) throw err;
+        
+    inquirer.prompt([
+      //Create choice array of Employees in database
+      {
+        name: 'choice',
+          type: 'rawlist',
+          choices() {
+            const employeeArray = [];
+            results.forEach(({ first_name, last_name }) => {
+              employeeArray.push(`${first_name} ${last_name}`);
+            });
+            return employeeArray
+          },
+          message: 'Which Employee do you wish to Update?',
+      },
+      //Create choice array of managers
+      {
+        name: 'managerchoice',
+          type: 'rawlist',
+          choices() {
+            const managerArray = [];
+            results.forEach(({ first_name, last_name, title }) => {
+              if (title === 'Manager'){
+                managerArray.push(`${first_name} ${last_name}`)
+              }
+            });
+            return managerArray
+          },
+          message: 'Who is the Employees new Manager?',
+        },
+      ])
+      .then((answer)=>{
+        //Get Selected Employee ID
+        let lookupArray = answer.choice.split(" ")
+        
+        let updateEmployee = results.find(result => 
+          (result.first_name + result.last_name) === (lookupArray[0] + lookupArray[1]));
+    
+        //Get Selected managers ID
+        let managerlookupArray = answer.managerchoice.split(" ")
+        
+        let updateManager = results.find(result => 
+          (result.first_name + result.last_name) === (managerlookupArray[0] + managerlookupArray[1]));
+          
+        //Update database with new role
+        connection.query('UPDATE employee SET ? WHERE ?',
+          [
+            {
+              manager_id: `${updateManager.id}`,
+              
+            },
+            {
+              id: `${updateEmployee.id}`
+            },
+          ],
+          (err, res) => {
+            if (err) throw err;
+            console.log('Employee has been Updated!');
+            start();
+          }
+        );
+       });
 
+  });
 };
 
 //connect to database
