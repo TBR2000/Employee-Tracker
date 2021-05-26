@@ -139,7 +139,7 @@ const updateData = () => {
 
 };
 
-// function that decides Delete choice
+// function that decides DELETE choice
 const deleteData = () => {
   inquirer.prompt({
       name: 'Delete',
@@ -441,6 +441,45 @@ const viewByManager = () =>{
 
 //View Finances function
 const viewFinances = () =>{
+  connection.query('SELECT * FROM department', (err, results) => {
+    if (err) throw err;
+    inquirer.prompt([
+      //build array of department choices
+      {
+        name: 'deptChoice',
+          type: 'rawlist',
+          choices() {
+            const deptArray = [];
+            results.forEach(({ dept_name }) => {
+            deptArray.push(`${dept_name}`)
+              
+            });
+            return deptArray
+          },
+          message: 'Which Department would you like to see total payroll for?',
+      }
+    ])
+        .then((answer) => {
+          //Take answer and pass to query
+          let query = 'SELECT role.*, department.dept_name, employee.role_id, employee.id AS employeeID, SUM(salary) AS sum FROM role LEFT JOIN department ON (role.department_id = department.id) LEFT JOIN employee ON (role.id = role_id) WHERE (dept_name = ?)'
+          let vari = `${answer.deptChoice}`
+          //Query department and SUM salaries
+          connection.query(query,vari,(err, results) => {
+            if (err) throw err;
+            //Push to array 
+            const budget = []
+            results.forEach(({ dept_name, sum }) => {
+              budget.push({
+                Department: (colours.blue(`${dept_name}`)),
+                Budget: (colours.red(`${sum}`))
+              })
+            });
+            //print table  
+            console.table((colours.cyan('Budget By Department')),budget)
+            start();
+          });
+        });
+  });
 
 };
 
