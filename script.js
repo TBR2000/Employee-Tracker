@@ -311,17 +311,22 @@ const viewRole = () =>{
 //View employee function
 const viewEmploy = () =>{
    //connect to db
-   connection.query('SELECT * FROM employees_db.employee INNER JOIN employees_db.role ON (role.id = employee.role_id);', (err, results) => {
+   connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, department.dept_name AS department, role.salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
     if (err) throw err;
+    console.log(results)
    //after getting results push into array
   let array = [];
-  results.forEach(({ first_name, last_name, title}) => {
+  results.forEach(({ first_name, last_name, title, department, salary, manager }) => {
+                
   array.push({
     Name: `${first_name}`,
     Surname: `${last_name}`,
     Role: `${title}`,
-    
+    Salary: `${salary}`,
+    Department: `${department}`,
+    Manager: `${manager}`
     })
+  
   });
 // Print table to console 
   console.table('Employees',array);
@@ -333,7 +338,7 @@ const viewEmploy = () =>{
 //Update role function
 const updateRole = () =>{
 //Query Database to get list of employees
-  connection.query('SELECT * FROM employees_db.role INNER JOIN employees_db.employee;', (err, results) => {
+  connection.query('SELECT * FROM employees_db.role JOIN employees_db.employee WHERE (role.id = employee.role_id);', (err, results) => {
   if (err) throw err;
   
   inquirer.prompt([
@@ -346,11 +351,7 @@ const updateRole = () =>{
           results.forEach(({ first_name, last_name }) => {
             employeeArray.push(`${first_name} ${last_name}`);
           });
-          function unique(value, index, self) {
-            return self.indexOf(value) === index;
-          }
-          let newArray = employeeArray.filter(unique);
-          return newArray;
+          return employeeArray
         },
         message: 'Which Employee do you wish to Update?',
     },
