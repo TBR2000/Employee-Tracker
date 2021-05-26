@@ -2,6 +2,7 @@
 const inquirer = require('inquirer')
 const mysql = require('mysql');
 const table = require('console.table')
+const colours = require('colors/safe')
 
 //Create connection to database
 const connection = mysql.createConnection({
@@ -14,19 +15,45 @@ const connection = mysql.createConnection({
 
 // function which prompts the user for what action they should take
 const start = () => {
+  console.log ((colours.blue(`  
+  ########:'##::::'##:'########::'##::::::::'#######::'##:::'##:'########:'########::::              
+  ##.....:: ###::'###: ##.... ##: ##:::::::'##.... ##:. ##:'##:: ##.....:: ##.....:::::              
+  ##::::::: ####'####: ##:::: ##: ##::::::: ##:::: ##::. ####::: ##::::::: ##::::::::::              
+  ######::: ## ### ##: ########:: ##::::::: ##:::: ##:::. ##:::: ######::: ######::::::              
+  ##...:::: ##. #: ##: ##.....::: ##::::::: ##:::: ##:::: ##:::: ##...:::: ##...:::::::              
+  ##::::::: ##:.:: ##: ##:::::::: ##::::::: ##:::: ##:::: ##:::: ##::::::: ##::::::::::              
+  ########: ##:::: ##: ##:::::::: ########:. #######::::: ##:::: ########: ########::::              
+ ........::..:::::..::..:::::::::........:::.......::::::..:::::........::........:::::              
+ '########:::::'###::::'########::::'###::::'########:::::'###:::::'######::'########:               
+  ##.... ##:::'## ##:::... ##..::::'## ##::: ##.... ##:::'## ##:::'##... ##: ##.....::               
+  ##:::: ##::'##:. ##::::: ##:::::'##:. ##:: ##:::: ##::'##:. ##:: ##:::..:: ##:::::::               
+  ##:::: ##:'##:::. ##:::: ##::::'##:::. ##: ########::'##:::. ##:. ######:: ######:::               
+  ##:::: ##: #########:::: ##:::: #########: ##.... ##: #########::..... ##: ##...::::               
+  ##:::: ##: ##.... ##:::: ##:::: ##.... ##: ##:::: ##: ##.... ##:'##::: ##: ##:::::::               
+  ########:: ##:::: ##:::: ##:::: ##:::: ##: ########:: ##:::: ##:. ######:: ########:               
+ ........:::..:::::..:::::..:::::..:::::..::........:::..:::::..:::......:::........::               
+ :'######::'##::::'##::'######::                                                                     
+ '##... ##: ###::'###:'##... ##:                                                                     
+  ##:::..:: ####'####: ##:::..::                                                                     
+  ##::::::: ## ### ##:. ######::                                                                     
+  ##::::::: ##. #: ##::..... ##:                                                                     
+  ##::: ##: ##:.:: ##:'##::: ##:                                                                     
+ . ######:: ##:::: ##:. ######::                                                                     
+ :......:::..:::::..:::......:::                                                                                                                                                                     
+`)))
     inquirer.prompt({
         name: 'start',
         type: 'list',
         message: 'Would you like to [ADD] to the database, [View] the database, or [Update] the database?',
-        choices: ['ADD', 'VIEW', 'UPDATE','EXIT'],
+        choices: [(colours.yellow('ADD')), (colours.blue('VIEW')), (colours.green('UPDATE')),(colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call ADD, VIEW or UPDATE functions
-        if (answer.start === 'ADD') {
+        if (answer.start === (colours.yellow('ADD'))) {
             addData();
-        } else if (answer.start === 'VIEW') {
+        } else if (answer.start === (colours.blue('VIEW'))) {
             viewData();
-        } else if (answer.start === 'UPDATE') {
+        } else if (answer.start === (colours.green('UPDATE'))) {
             updateData();
         } else {
           connection.end();
@@ -40,15 +67,15 @@ const addData = () => {
         name: 'Add',
         type: 'list',
         message: 'Would you like to add a [DEPT], a [ROLE], or an [EMPLOYEE]?',
-        choices: ['DEPT', 'ROLE', 'EMPLOYEE','EXIT'],
+        choices: [(colours.yellow('DEPT')), (colours.blue('ROLE')), (colours.green('EMPLOYEE')),(colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call ADD DEPT, ROLE or EMPLOYEE function
-        if (answer.Add === 'DEPT') {
+        if (answer.Add === (colours.yellow('DEPT'))) {
             addDept();
-        } else if (answer.Add === 'ROLE') {
+        } else if (answer.Add === (colours.blue('ROLE'))) {
             addRole();
-        } else if (answer.Add === 'EMPLOYEE') {
+        } else if (answer.Add === (colours.green('EMPLOYEE'))) {
             addEmploy();
         } else {
           connection.end();
@@ -62,16 +89,16 @@ const viewData = () => {
     inquirer.prompt({
         name: 'View',
         type: 'list',
-        message: 'Would you like to VIEW a [DEPT], a [ROLE], or an [EMPLOYEE]?',
-        choices: ['DEPT', 'ROLE', 'EMPLOYEE','EXIT'],
+        message: 'Would you like to VIEW a [DEPT], a [ROLE], or [EMPLOYEES]?',
+        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')),(colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
-        if (answer.View === 'DEPT') {
+        if (answer.View === (colours.yellow('DEPT'))) {
             viewDept();
-        } else if (answer.View === 'ROLE') {
+        } else if (answer.View === (colours.blue('ROLE'))) {
             viewRole();
-        } else if (answer.View === 'EMPLOYEE') {
+        } else if (answer.View === (colours.green('EMPLOYEES'))) {
             viewEmploy();
         } else {
           connection.end();
@@ -86,13 +113,13 @@ const updateData = () => {
         name: 'Update',
         type: 'list',
         message: 'Would you like to Update Employee [ROLE] or [Manager]?',
-        choices: ['ROLE', 'MANAGER','EXIT'],
+        choices: [(colours.yellow('ROLE')), (colours.green('MANAGER')),(colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
-        if (answer.Update === 'MANAGER') {
+        if (answer.Update === (colours.green('MANAGER'))) {
             updateManager();
-        } else if (answer.Update === 'ROLE') {
+        } else if (answer.Update === (colours.yellow('ROLE'))) {
             updateRole();
         } else {
           connection.end();
@@ -276,7 +303,7 @@ const viewDept = () =>{
         let array = [];
         results.forEach(({ dept_name }) => {
         array.push({
-          Department: `${dept_name}`
+          Department: (colours.green(`${dept_name}`))
         });
         });
       // Print table to console 
@@ -296,8 +323,8 @@ const viewRole = () =>{
     let array = [];
     results.forEach(({ title, salary, }) => {
     array.push({
-      title: `${title}`,
-      salary: `${salary}`,
+      title: (colours.green(`${title}`)),
+      salary: (colours.blue(`${salary}`)),
       
     })
     });
@@ -313,18 +340,18 @@ const viewEmploy = () =>{
    //connect to db
    connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title, department.dept_name AS department, role.salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
     if (err) throw err;
-    console.log(results)
+    
    //after getting results push into array
   let array = [];
   results.forEach(({ first_name, last_name, title, department, salary, manager }) => {
                 
   array.push({
-    Name: `${first_name}`,
-    Surname: `${last_name}`,
-    Role: `${title}`,
-    Salary: `${salary}`,
-    Department: `${department}`,
-    Manager: `${manager}`
+    Name: (colours.green(`${first_name}`)),
+    Surname: (colours.green(`${last_name}`)),
+    Role: (colours.yellow(`${title}`)),
+    Salary: (colours.blue(`${salary}`)),
+    Department: (colours.red(`${department}`)),
+    Manager: (colours.yellow(`${manager}`))
     })
   
   });
