@@ -13,8 +13,8 @@ const connection = mysql.createConnection({
     database: 'employees_db',
 });
 
-// function which prompts the user for what action they should take
-const start = () => {
+//Title Screen
+const firstStart = () =>{
   console.log ((colours.blue(`  
   ########:'##::::'##:'########::'##::::::::'#######::'##:::'##:'########:'########::::              
   ##.....:: ###::'###: ##.... ##: ##:::::::'##.... ##:. ##:'##:: ##.....:: ##.....:::::              
@@ -41,7 +41,12 @@ const start = () => {
  . ######:: ##:::: ##:. ######::                                                                     
  :......:::..:::::..:::......:::                                                                                                                                                                     
 `)))
-    inquirer.prompt({
+ start();
+};
+
+// function which prompts the user for what action they should take
+const start = () => {
+      inquirer.prompt({
         name: 'start',
         type: 'list',
         message: 'Would you like to [ADD] to the database, [View] the database, or [Update] the database?',
@@ -365,9 +370,9 @@ const viewEmploy = () =>{
 //Update role function
 const updateRole = () =>{
 //Query Database to get list of employees
-  connection.query('SELECT * FROM employees_db.role JOIN employees_db.employee WHERE (role.id = employee.role_id);', (err, results) => {
+  connection.query('SELECT role.*, employee.first_name, employee.last_name, employee.role_id, employee.id AS employeeID FROM employees_db.role LEFT JOIN employees_db.employee ON (role.id = role_id);', (err, results) => {
   if (err) throw err;
-  
+  console.log(results)
   inquirer.prompt([
     //Create choice array of Employees in database
     {
@@ -416,11 +421,11 @@ const updateRole = () =>{
     connection.query('UPDATE employee SET ? WHERE ?',
       [
         {
-          role_id: `${updatedRole.role_id}`,
+          role_id: `${updatedRole.id}`,
           
         },
         {
-          id: `${updateEmployee.id}`
+          id: `${updateEmployee.employeeID}`
         },
       ],
       (err, res) => {
@@ -443,5 +448,5 @@ connection.connect((err) => {
     if (err) throw err;
     console.log(`connected as id ${connection.threadId}\n`);
     // run the start function after the connection is made to prompt the user
-  start();
+  firstStart();
 });
