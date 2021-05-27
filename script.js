@@ -2,7 +2,8 @@
 const inquirer = require('inquirer')
 const mysql = require('mysql');
 const table = require('console.table')
-const colours = require('colors/safe')
+const colours = require('colors/safe');
+
 
 //Create connection to database
 const connection = mysql.createConnection({
@@ -181,7 +182,7 @@ const addDept = () =>{
       },
       (err) => {
         if (err) throw err;
-        console.log('Your department was created successfully!');
+        console.log(colours.cyan('Your department was created successfully!'));
         // begin again
         start();
       }
@@ -193,7 +194,7 @@ const addDept = () =>{
 //Add role function
 const addRole = () =>{
     // query the database for all departments
-  connection.query('SELECT * FROM department', (err, results) => {
+  connection.query('SELECT * FROM department', (err, res) => {
     if (err) throw err;
   // prompt for name of new role
   inquirer.prompt([
@@ -220,7 +221,7 @@ const addRole = () =>{
         type: 'rawlist',
         choices() {
           const choiceArray = [];
-          results.forEach(({ dept_name }) => {
+          res.forEach(({ dept_name }) => {
             choiceArray.push(dept_name);
           });
           return choiceArray;
@@ -231,7 +232,7 @@ const addRole = () =>{
   .then((answer) => {
     // gets the information of the chosen department
         let chosendept;
-        results.forEach((department) => {
+        res.forEach((department) => {
           if (department.dept_name === answer.choice) {
             chosendept = department;
           }
@@ -246,7 +247,7 @@ const addRole = () =>{
       },
       (err) => {
         if (err) throw err;
-        console.log('Your new role was created successfully!');
+        console.log(colours.cyan('Your new role was created successfully!'));
         // begin again
         start();
       }
@@ -258,7 +259,7 @@ const addRole = () =>{
 //Add employee function
 const addEmploy = () =>{
     // query the database for all Roles
-  connection.query('SELECT * FROM role', (err, results) => {
+  connection.query('SELECT role.*, department.dept_name, department.id FROM role LEFT JOIN department ON (department_id = department.id);', (err, res) => {
     if (err) throw err;
      // prompt for name of new employee
   inquirer.prompt([
@@ -278,8 +279,8 @@ const addEmploy = () =>{
         type: 'rawlist',
         choices() {
           const choiceArray = [];
-          results.forEach(({ title }) => {
-            choiceArray.push(title);
+          res.forEach(({ title, dept_name }) => {
+            choiceArray.push(`${title} ${dept_name}`);
           });
           return choiceArray;
         },
@@ -290,9 +291,10 @@ const addEmploy = () =>{
   
   .then((answer) => {
     // gets the information of the chosen role
+    const split = answer.choice.split(" ");
         let chosenRole;
-        results.forEach((role) => {
-          if (role.title === answer.choice) {
+        res.forEach((role) => {
+          if (role.title === split[0]) {
             chosenRole = role;
           }
         }); 
@@ -301,12 +303,12 @@ const addEmploy = () =>{
   //Find and Insert Manager ID
     let query = 'SELECT * FROM department JOIN role ON (role.department_id = department.id) RIGHT JOIN employee ON (employee.role_id = role.id) WHERE (title = ?)';
     let vari = 'Manager'
-    connection.query(query,vari,(err, results) => {
+    connection.query(query,vari,(err, res) => {
     if (err) throw err;
         
-    let manager = results.find(result => 
-      result.department_id === chosenRole.department_id);
-        
+    let manager = res.find(res => 
+      res.department_id === chosenRole.department_id);
+      
     // insert the new Employee into the db 
     connection.query(
       'INSERT INTO employee SET ?',
@@ -318,7 +320,7 @@ const addEmploy = () =>{
       },
       (err) => {
         if (err) throw err;
-        console.log('Your new Employee has been added successfully!');
+        console.log(colours.cyan('Your new Employee has been added successfully!'));
         // begin again
         start();
        }
@@ -331,11 +333,11 @@ const addEmploy = () =>{
 //View dept function
 const viewDept = () =>{
     //connect to db
-    connection.query('SELECT * FROM department', (err, results) => {
+    connection.query('SELECT * FROM department', (err, res) => {
         if (err) throw err;
-      //after getting results push into array
+      //after getting result push into array
         let array = [];
-        results.forEach(({ dept_name }) => {
+        res.forEach(({ dept_name }) => {
         array.push({
           Department: (colours.green(`${dept_name}`))
         });
@@ -350,12 +352,12 @@ const viewDept = () =>{
 //View role function
 const viewRole = () =>{
     //connect to db
-    connection.query('SELECT * FROM role', (err, results) => {
+    connection.query('SELECT * FROM role', (err, res) => {
       if (err) throw err;
     
     //after getting results push into array
     let array = [];
-    results.forEach(({ title, salary, }) => {
+    res.forEach(({ title, salary, }) => {
     array.push({
       title: (colours.green(`${title}`)),
       salary: (colours.blue(`${salary}`)),
@@ -372,12 +374,12 @@ const viewRole = () =>{
 //View employee function
 const viewEmploy = () =>{
    //connect to db
-   connection.query('SELECT employee.id, role.title, department.dept_name AS department, role.salary, employee.first_name AS Employee_first, employee.last_name AS Employee_last, manager.first_name AS Manager_First, manager.last_name AS Manager_last FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, results) => {
+   connection.query('SELECT employee.id, role.title, department.dept_name AS department, role.salary, employee.first_name AS Employee_first, employee.last_name AS Employee_last, manager.first_name AS Manager_First, manager.last_name AS Manager_last FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;', (err, res) => {
     if (err) throw err;
     
    //after getting results push into array
   let array = [];
-  results.forEach(({ Employee_first, Employee_last, title, department, salary, Manager_First, Manager_last }) => {
+  res.forEach(({ Employee_first, Employee_last, title, department, salary, Manager_First, Manager_last }) => {
                 
   array.push({
     Employee: (colours.green(`${Employee_first} ${Employee_last} `)),
@@ -398,7 +400,7 @@ const viewEmploy = () =>{
 //View By Manager Function
 const viewByManager = () =>{
   //Query Database to get list of employees
-  connection.query('SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ', (err, results) => {
+  connection.query('SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ', (err, res) => {
     if (err) throw err;
     inquirer.prompt([
       {
@@ -406,7 +408,7 @@ const viewByManager = () =>{
           type: 'rawlist',
           choices() {
             const managerArray = [];
-            results.forEach(({ first_name, last_name, title }) => {
+            res.forEach(({ first_name, last_name, title }) => {
               if (title === 'Manager'){
                 managerArray.push(`${first_name} ${last_name}`)
               }
@@ -420,12 +422,12 @@ const viewByManager = () =>{
       //Get Selected managers ID
       const managerlookupArray = answer.managerchoice.split(" ")
           
-      const manager = results.find(result => 
-        (result.first_name + result.last_name) === (managerlookupArray[0] + managerlookupArray[1])); 
+      const manager = res.find(res => 
+        (res.first_name + res.last_name) === (managerlookupArray[0] + managerlookupArray[1])); 
         
         //after getting results push into array
       let array = [];
-      results.forEach(({ first_name, last_name, manager_id }) => {
+      res.forEach(({ first_name, last_name, manager_id }) => {
           if (manager.id === manager_id) {      
               array.push({
               Employee: (colours.green(`${first_name} ${last_name}`)),
@@ -441,7 +443,7 @@ const viewByManager = () =>{
 
 //View Finances function
 const viewFinances = () =>{
-  connection.query('SELECT * FROM department', (err, results) => {
+  connection.query('SELECT * FROM department', (err, res) => {
     if (err) throw err;
     inquirer.prompt([
       //build array of department choices
@@ -450,7 +452,7 @@ const viewFinances = () =>{
           type: 'rawlist',
           choices() {
             const deptArray = [];
-            results.forEach(({ dept_name }) => {
+            res.forEach(({ dept_name }) => {
             deptArray.push(`${dept_name}`)
               
             });
@@ -464,11 +466,11 @@ const viewFinances = () =>{
           let query = 'SELECT role.*, department.dept_name, employee.role_id, employee.id AS employeeID, SUM(salary) AS sum FROM role LEFT JOIN department ON (role.department_id = department.id) LEFT JOIN employee ON (role.id = role_id) WHERE (dept_name = ?)'
           let vari = `${answer.deptChoice}`
           //Query department and SUM salaries
-          connection.query(query,vari,(err, results) => {
+          connection.query(query,vari,(err, res) => {
             if (err) throw err;
             //Push to array 
             const budget = []
-            results.forEach(({ dept_name, sum }) => {
+            res.forEach(({ dept_name, sum }) => {
               budget.push({
                 Department: (colours.blue(`${dept_name}`)),
                 Budget: (colours.red(`${sum}`))
@@ -486,7 +488,7 @@ const viewFinances = () =>{
 //Update role function
 const updateRole = () =>{
 //Query Database to get list of employees
-  connection.query('SELECT role.*, employee.first_name, employee.last_name, employee.role_id, employee.id AS employeeID FROM employees_db.role LEFT JOIN employees_db.employee ON (role.id = role_id);', (err, results) => {
+  connection.query('SELECT role.*, employee.first_name, employee.last_name, employee.role_id, employee.id AS employeeID FROM employees_db.role LEFT JOIN employees_db.employee ON (role.id = role_id);', (err, res) => {
   if (err) throw err;
   
   inquirer.prompt([
@@ -496,7 +498,7 @@ const updateRole = () =>{
         type: 'rawlist',
         choices() {
           const employeeArray = [];
-          results.forEach(({ first_name, last_name }) => {
+          res.forEach(({ first_name, last_name }) => {
             employeeArray.push(`${first_name} ${last_name}`);
           });
           return employeeArray
@@ -508,7 +510,7 @@ const updateRole = () =>{
     type: 'rawlist',
     choices() {
       const roleArray = [];
-      results.forEach(({ title }) => {
+      res.forEach(({ title }) => {
         roleArray.push(title);
       });
       function unique(value, index, self) {
@@ -524,12 +526,12 @@ const updateRole = () =>{
     //Get Selected Employee ID
     let lookupArray = answer.choice.split(" ")
     
-    let updateEmployee = results.find(result => 
-      (result.first_name + result.last_name) === (lookupArray[0] + lookupArray[1]));
+    let updateEmployee = res.find(res => 
+      (res.first_name + res.last_name) === (lookupArray[0] + lookupArray[1]));
 
     //Get Selected Roles ID
-    let updatedRole = results.find(result =>
-      result.title === answer.newRole);
+    let updatedRole = res.find(res =>
+      res.title === answer.newRole);
 
     //Update database with new role
     connection.query('UPDATE employee SET ? WHERE ?',
@@ -544,7 +546,7 @@ const updateRole = () =>{
       ],
       (err, res) => {
         if (err) throw err;
-        console.log('Employee has been Updated!');
+        console.log(colours.cyan('Employee has been Updated!'));
         start();
       }
     );
@@ -555,7 +557,7 @@ const updateRole = () =>{
 //Update Manager function
 const updateManager = () =>{
   //Query Database to get list of employees
-  connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ', (err, results) => {
+  connection.query('SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role ON employee.role_id = role.id ', (err, res) => {
     if (err) throw err;
         
     inquirer.prompt([
@@ -565,7 +567,7 @@ const updateManager = () =>{
           type: 'rawlist',
           choices() {
             const employeeArray = [];
-            results.forEach(({ first_name, last_name }) => {
+            res.forEach(({ first_name, last_name }) => {
               employeeArray.push(`${first_name} ${last_name}`);
             });
             return employeeArray
@@ -578,7 +580,7 @@ const updateManager = () =>{
           type: 'rawlist',
           choices() {
             const managerArray = [];
-            results.forEach(({ first_name, last_name, title }) => {
+            res.forEach(({ first_name, last_name, title }) => {
               if (title === 'Manager'){
                 managerArray.push(`${first_name} ${last_name}`)
               }
@@ -592,14 +594,14 @@ const updateManager = () =>{
         //Get Selected Employee ID
         let lookupArray = answer.choice.split(" ")
         
-        let updateEmployee = results.find(result => 
-          (result.first_name + result.last_name) === (lookupArray[0] + lookupArray[1]));
+        let updateEmployee = res.find(res => 
+          (res.first_name + res.last_name) === (lookupArray[0] + lookupArray[1]));
     
         //Get Selected managers ID
         let managerlookupArray = answer.managerchoice.split(" ")
         
-        let updateManager = results.find(result => 
-          (result.first_name + result.last_name) === (managerlookupArray[0] + managerlookupArray[1]));
+        let updateManager = res.find(res => 
+          (res.first_name + res.last_name) === (managerlookupArray[0] + managerlookupArray[1]));
           
         //Update database with new role
         connection.query('UPDATE employee SET ? WHERE ?',
@@ -614,7 +616,7 @@ const updateManager = () =>{
           ],
           (err, res) => {
             if (err) throw err;
-            console.log('Employee has been Updated!');
+            console.log(colours.cyan('Employee has been Updated!'));
             start();
           }
         );
@@ -624,23 +626,143 @@ const updateManager = () =>{
 
 //Delete Dept function
 const deleteDept = () =>{
+  //connect to db
+  connection.query('SELECT * FROM department', (err, res) => {
+    if (err) throw err;
+    inquirer.prompt([
+      //build array of department choices
+      {
+        name: 'deptChoice',
+          type: 'rawlist',
+          choices() {
+            const deptArray = [];
+            res.forEach(({ dept_name }) => {
+            deptArray.push(`${dept_name}`)
+              
+            });
+            return deptArray
+          },
+          message: 'Which Department would you like to Delete?',
+      }
+    ])
+    //After getting an answer, process delete query
+    .then((answer) => {
+      console.log(colours.red('Deleting...\n'));
+      connection.query('DELETE FROM department WHERE ?',
+    {
+      dept_name: `${answer.deptChoice}`,
+    },
+      (err, res) => {
+      if (err) throw err;
 
+      console.log(colours.red(`Department deleted!\n`));
+
+    // back to start
+      start();
+      
+    });
+  })
+
+});
 };
 
 //Delete Role Function
 const deleteRole = () =>{
+  //connect to db
+  connection.query('SELECT * FROM role', (err, res) => {
+    if (err) throw err;
+    inquirer.prompt([
+      //build array of role choices
+      {
+        name: 'roleChoice',
+          type: 'rawlist',
+          choices() {
+            const roleArray = [];
+            res.forEach(({ title }) => {
+            roleArray.push(`${title}`)
+              
+            });
+            return roleArray
+          },
+          message: 'Which Role would you like to Delete?',
+      }
+    ])
+    //After getting an answer, process delete query
+    .then((answer) => {
+      console.log(colours.red('Deleting...\n'));
+      connection.query('DELETE FROM role WHERE ?',
+    {
+      title: `${answer.roleChoice}`,
+    },
+      (err, res) => {
+      if (err) throw err;
+
+      console.log(colours.red(`Role deleted!\n`));
+
+    // back to start
+      start();
+      
+    });
+  })
+
+});
 
 };
 
 //Delete Employee Function
 const deleteEmploy = () =>{
+  //connect to db
+  connection.query('SELECT * FROM employee', (err, res) => {
+    if (err) throw err;
+    inquirer.prompt([
+      //build array of employee choices
+      {
+        name: 'choice',
+          type: 'rawlist',
+          choices() {
+            const deptArray = [];
+            res.forEach(({ first_name, last_name }) => {
+            deptArray.push(`${first_name} ${last_name}`)
+              
+            });
+            return deptArray
+          },
+          message: 'Which Department would you like to Delete?',
+      }
+    ])  
+
+    //After getting an answer, process delete query
+    .then((answer) => {
+      //Get Selected Employee ID
+    let lookupArray = answer.choice.split(" ")
+        
+    let deleteEmployee = res.find(res => 
+      (res.first_name + res.last_name) === (lookupArray[0] + lookupArray[1]));
+
+      console.log(colours.red('Deleting...\n'));
+      connection.query('DELETE FROM department WHERE ?',
+    {
+      id: `${deleteEmployee.id}`,
+    },
+      (err, res) => {
+      if (err) throw err;
+
+      console.log(colours.red(`Employee deleted!\n`));
+
+    // back to start
+      start();
+      
+    });
+  })
+
+});
 
 };
 
 //connect to database
 connection.connect((err) => {
     if (err) throw err;
-    console.log(`connected as id ${connection.threadId}\n`);
+    console.log(colours.magenta(`connected as id ${connection.threadId}\n`));
     // run the start function after the connection is made to prompt the user
   firstStart();
 });
