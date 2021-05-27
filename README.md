@@ -18,10 +18,10 @@ A content management system for an employee database
 - [Links](#links)
 
 ## Installation
-Clone project from github. Run schema located in db file, with an optional seefile to get you started, in the MySQL workbench of your choice. Open command line terminal in the file containing the CMS and enter 'npm start'. Once the CMS is running simply follow the prompts to manage your content.
+Clone project from github. Run schema located in db file, with an optional seed file to get you started, in the MySQL workbench of your choice. Enter you MySQL user name and password into the connection properties fields in the script.js file. Open command line terminal in the location containing the CMS and enter 'npm start'. Once the CMS is running simply follow the prompts to manage your content.
 
 ## Usage
-Follow the prompts will gove you options to view, add, update or delete from your database. You can add a new department, a new role or a new employee. When you add a new employee, the manager of the department they belong to will automatically be assigned. You can update both an employees maanger and role by following the update prompts. When you view the database you can view departments, roles and a full list of employees. You can also view by manager and budgets by department. When you follow the delete prompts you can delete a department, a role or an employee form teh database.
+Following the prompts will give you options to view, add, update or delete from your database. You can add a new department, a new role or a new employee. When you add a new employee, the manager of the department they belong to will automatically be assigned. You can update both an employee's manager and role by following the update prompts. When you view the database you can view departments, roles and a full list of employees. You can also view by manager and budgets by department. When you follow the delete prompts you can delete a department, a role or an employee from the database.
 
 ## Contributions
 If you wish to contribute, please contact me on the information below
@@ -42,7 +42,7 @@ If you have any questions please contact me at: timothyrabbidge@live.com.au
 As this project is not being deployed, please find the walk-through video at this link:
 **link to go here**
 
-
+a
 ## Links 
 Links to the deployed project and Github Repository
 
