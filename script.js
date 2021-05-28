@@ -712,7 +712,7 @@ const deleteRole = () =>{
           if (role.title === split[0]) {
             chosenRole = role;}
           });
-          console.log(chosenRole)
+          
       console.log(colours.red('Deleting...\n'));
       connection.query('DELETE FROM role WHERE ?',
     {
