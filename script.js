@@ -51,7 +51,7 @@ const start = () => {
         name: 'start',
         type: 'list',
         message: 'Would you like to [ADD] to the database, [View] the database, [Update] the database, or [Delete] from the database?',
-        choices: [(colours.yellow('ADD')), (colours.blue('VIEW')), (colours.green('UPDATE')),(colours.magenta('DELETE')),(colours.red('EXIT'))],
+        choices: [(colours.yellow('ADD')), (colours.blue('VIEW')), (colours.green('UPDATE')),(colours.magenta('DELETE')), (colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call ADD, VIEW or UPDATE functions
@@ -75,7 +75,7 @@ const addData = () => {
         name: 'Add',
         type: 'list',
         message: 'Would you like to add a [DEPT], a [ROLE], or an [EMPLOYEE]?',
-        choices: [(colours.yellow('DEPT')), (colours.blue('ROLE')), (colours.green('EMPLOYEE')),(colours.red('EXIT'))],
+        choices: [(colours.yellow('DEPT')), (colours.blue('ROLE')), (colours.green('EMPLOYEE')), (colours.cyan('BACK TO START')), (colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call ADD DEPT, ROLE or EMPLOYEE function
@@ -85,6 +85,8 @@ const addData = () => {
             addRole();
         } else if (answer.Add === (colours.green('EMPLOYEE'))) {
             addEmploy();
+        } else if (answer.Add === (colours.cyan('BACK TO START'))) {
+            start();
         } else {
           connection.end();
         }
@@ -98,7 +100,7 @@ const viewData = () => {
         name: 'View',
         type: 'list',
         message: 'Would you like to VIEW a [DEPT], a [ROLE], the [EMPLOYEES], Employees [BY MANAGER] or the [FINANCIALS}?',
-        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')), (colours.cyan('BY MANAGER')), (colours.magenta('FINANCIALS')), (colours.red('EXIT'))],
+        choices: [(colours.yellow('DEPT')),(colours.blue('ROLE')), (colours.green('EMPLOYEES')), (colours.cyan('BY MANAGER')), (colours.magenta('FINANCIALS')), (colours.cyan('BACK TO START')), (colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
@@ -111,7 +113,9 @@ const viewData = () => {
         } else if (answer.View === (colours.cyan('BY MANAGER'))) {
             viewByManager();    
         } else if (answer.View === (colours.magenta('FINANCIALS'))) {
-            viewFinances();     
+            viewFinances();
+        } else if (answer.View === (colours.cyan('BACK TO START'))) {
+            start();     
         } else {
           connection.end();
         }
@@ -125,7 +129,7 @@ const updateData = () => {
         name: 'Update',
         type: 'list',
         message: 'Would you like to Update Employee [ROLE] or [Manager]?',
-        choices: [(colours.yellow('ROLE')), (colours.green('MANAGER')),(colours.red('EXIT'))],
+        choices: [(colours.yellow('ROLE')), (colours.green('MANAGER')), (colours.cyan('BACK TO START')), (colours.red('EXIT'))],
       })
       .then((answer) => {
         // based on the answer, call view DEPT, ROLE or EMPLOYEE function
@@ -133,6 +137,8 @@ const updateData = () => {
             updateManager();
         } else if (answer.Update === (colours.yellow('ROLE'))) {
             updateRole();
+        } else if (answer.Update === (colours.cyan('BACK TO START'))) {
+            start();
         } else {
           connection.end();
         }
@@ -146,7 +152,7 @@ const deleteData = () => {
       name: 'Delete',
       type: 'list',
       message: 'Would you like to delete a [DEPT], a [ROLE], or an [EMPLOYEE]?',
-      choices: [(colours.yellow('DEPT')), (colours.blue('ROLE')), (colours.green('EMPLOYEE')),(colours.red('EXIT'))],
+      choices: [(colours.yellow('DEPT')), (colours.blue('ROLE')), (colours.green('EMPLOYEE')), (colours.cyan('BACK TO START')), (colours.red('EXIT'))],
     })
     .then((answer) => {
       // based on the answer, call Delete DEPT, ROLE or EMPLOYEE function
@@ -156,6 +162,8 @@ const deleteData = () => {
           deleteRole();
       } else if (answer.Delete === (colours.green('EMPLOYEE'))) {
           deleteEmploy();
+      } else if (answer.Delete === (colours.cyan('BACK TO START'))) {
+          start();
       } else {
         connection.end();
       }
@@ -259,7 +267,7 @@ const addRole = () =>{
 //Add employee function
 const addEmploy = () =>{
     // query the database for all Roles
-  connection.query('SELECT role.*, department.dept_name, department.id FROM role LEFT JOIN department ON (department_id = department.id);', (err, res) => {
+  connection.query('SELECT role.*, department.dept_name, department.id AS dept_id FROM role LEFT JOIN department ON (department_id = department.id);', (err, res) => {
     if (err) throw err;
      // prompt for name of new employee
   inquirer.prompt([
@@ -304,19 +312,27 @@ const addEmploy = () =>{
     let query = 'SELECT * FROM department JOIN role ON (role.department_id = department.id) RIGHT JOIN employee ON (employee.role_id = role.id) WHERE (title = ?)';
     let vari = 'Manager'
     connection.query(query,vari,(err, res) => {
-    if (err) throw err;
-        
-    let manager = res.find(res => 
+    if (err) throw err;       
+    let managerId = res.find(res => 
       res.department_id === chosenRole.department_id);
-      
-    // insert the new Employee into the db 
+
+  // If no manger insert 0 to manager_id field  
+    let manager;
+    if(!managerId){
+      manager = 0
+    }else{
+      manager = managerId.id
+    }  
+     
+      console.log (manager)
+   // insert the new Employee into the db 
     connection.query(
       'INSERT INTO employee SET ?',
       {
         first_name: answer.first_name,
         last_name: answer.last_name,
         role_id: chosenRole.id,
-        manager_id: manager.id
+        manager_id: manager
       },
       (err) => {
         if (err) throw err;
@@ -669,7 +685,7 @@ const deleteDept = () =>{
 //Delete Role Function
 const deleteRole = () =>{
   //connect to db
-  connection.query('SELECT * FROM role', (err, res) => {
+  connection.query('SELECT role.*, department.dept_name, department.id AS dept_id FROM role LEFT JOIN department ON (department_id = department.id);', (err, res) => {
     if (err) throw err;
     inquirer.prompt([
       //build array of role choices
@@ -678,8 +694,8 @@ const deleteRole = () =>{
           type: 'rawlist',
           choices() {
             const roleArray = [];
-            res.forEach(({ title }) => {
-            roleArray.push(`${title}`)
+            res.forEach(({ title, dept_name }) => {
+            roleArray.push(`${title} ${dept_name}`)
               
             });
             return roleArray
@@ -687,16 +703,24 @@ const deleteRole = () =>{
           message: 'Which Role would you like to Delete?',
       }
     ])
+
     //After getting an answer, process delete query
     .then((answer) => {
+      const split = answer.roleChoice.split(" ");
+        let chosenRole;
+        res.forEach((role) => {
+          if (role.title === split[0]) {
+            chosenRole = role;}
+          });
+          console.log(chosenRole)
       console.log(colours.red('Deleting...\n'));
       connection.query('DELETE FROM role WHERE ?',
     {
-      title: `${answer.roleChoice}`,
+      title: `${chosenRole.title}`
     },
       (err, res) => {
       if (err) throw err;
-
+    
       console.log(colours.red(`Role deleted!\n`));
 
     // back to start
@@ -738,9 +762,9 @@ const deleteEmploy = () =>{
         
     let deleteEmployee = res.find(res => 
       (res.first_name + res.last_name) === (lookupArray[0] + lookupArray[1]));
-
+      
       console.log(colours.red('Deleting...\n'));
-      connection.query('DELETE FROM department WHERE ?',
+      connection.query('DELETE FROM employee WHERE ?',
     {
       id: `${deleteEmployee.id}`,
     },
